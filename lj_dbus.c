@@ -18,6 +18,7 @@
 
 /* Internal prototypes */
 static gboolean lj_dbus_open(JamDBus *jd);
+static void lj_dbus_predict_player_version(MediaPlayer *player, gchar *dest);
 static gboolean lj_dbus_append_player_v1(JamDBus *jd, gchar *dest);
 static gboolean lj_dbus_append_player_v2(JamDBus *jd, gchar *dest);
 static void lj_dbus_players_clear(JamDBus *jd);
@@ -57,12 +58,28 @@ lj_dbus_new(void) {
 	return jd;
 }
 
+/* Predict version of the player */
+static void
+lj_dbus_predict_player_version(MediaPlayer *player, gchar *dest) {
+	gchar *version;
+
+	version = g_utf8_strchr(player->name, strlen(player->name), ' ');
+	player->version = version ? ++version : NULL;
+
+	/* Set workaround for broken player(s) */
+	if (g_str_has_suffix(dest, "audacious") &&
+	    (g_str_has_prefix(version, "0.") ||
+         g_str_has_prefix(version, "1."))) {
+		player->hint |= MPRIS_HINT_BAD_STATUS;
+	}
+}
+
 static gboolean
 lj_dbus_append_player_v1(JamDBus *jd, gchar *dest) {
 	MediaPlayer *player;
 	DBusGProxy *proxy;
 	GError *error = NULL;
-	gchar *name, *version;
+	gchar *name;
 
 	proxy = dbus_g_proxy_new_for_name(jd->bus, dest, "/", MPRIS1_IF);
 
@@ -78,17 +95,9 @@ lj_dbus_append_player_v1(JamDBus *jd, gchar *dest) {
 	player->dest = g_strdup(dest);
 	player->name = g_strdup(name);
 
-	/* Predict version of the player */
-	version = g_utf8_strchr(player->name, strlen(player->name), ' ');
-	player->version = version ? ++version : NULL;
+	lj_dbus_predict_player_version(player, dest);
 
 	player->proxy = dbus_g_proxy_new_for_name(jd->bus, dest, "/Player", MPRIS1_IF);
-
-	if (g_str_has_suffix(dest, "audacious") &&
-	    (g_str_has_prefix(version, "0.") ||
-         g_str_has_prefix(version, "1."))) {
-		player->hint |= MPRIS_HINT_BAD_STATUS;
-	}
 
 	jd->player = g_list_append(jd->player, (gpointer) player);
 
@@ -103,7 +112,6 @@ lj_dbus_append_player_v2(JamDBus *jd, gchar *dest) {
 	MediaPlayer *player;
 	DBusGProxy *proxy;
 	GError *error = NULL;
-	gchar *version;
 	GValue result = { 0, };
 
 	proxy = dbus_g_proxy_new_for_name(jd->bus, dest, "/org/mpris/MediaPlayer2", DBUS_IF_PROPS);
@@ -129,9 +137,7 @@ lj_dbus_append_player_v2(JamDBus *jd, gchar *dest) {
 
 	g_value_unset(&result);
 
-	/* Predict version of the player */
-	version = g_utf8_strchr(player->name, strlen(player->name), ' ');
-	player->version = version ? ++version : NULL;
+	lj_dbus_predict_player_version(player, dest);
 
 	player->proxy = proxy;
 
