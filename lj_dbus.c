@@ -22,6 +22,7 @@ static gboolean lj_dbus_append_player(JamDBus *jd, gchar *dest);
 static gboolean lj_dbus_append_player_v2(JamDBus *jd, gchar *dest);
 static void lj_dbus_players_clear(JamDBus *jd);
 static gboolean lj_dbus_players_find(JamDBus *jd, GError **error);
+static gboolean lj_dbus_mpris_update_info_v1(MediaPlayer *player, GError **error);
 static gboolean lj_dbus_mpris_update_info_v2(MediaPlayer *player, GError **error);
 
 /* Implementation */
@@ -205,9 +206,6 @@ lj_dbus_mpris_update_list(JamDBus *jd, GError **error) {
 
 gboolean
 lj_dbus_mpris_update_info(JamDBus *jd, GList *list, GError **error) {
-	GValueArray *array = NULL;
-	GHashTable *info = NULL;
-	GValue *value = NULL;
 	MediaPlayer *player;
 
 	if (jd == NULL)
@@ -221,9 +219,22 @@ lj_dbus_mpris_update_info(JamDBus *jd, GList *list, GError **error) {
 
 	memset((void *) &player->info, 0, sizeof(MetaInfo));
 
-	/* If we have MPRISv2 */
-	if (player->mprisv == MPRIS_V2)
+	if (player->mprisv == MPRIS_V2) {
+		/* If we have MPRISv2 */
 		return lj_dbus_mpris_update_info_v2(player, error);
+	} else if (player->mprisv == MPRIS_V2) {
+		/* If we have MPRISv1 */
+		return lj_dbus_mpris_update_info_v1(player, error);
+	}
+
+	return FALSE;
+}
+
+static gboolean
+lj_dbus_mpris_update_info_v1(MediaPlayer *player, GError **error) {
+	GValueArray *array = NULL;
+	GHashTable *info = NULL;
+	GValue *value = NULL;
 
 	if (player->hint & MPRIS_HINT_BAD_STATUS) {
 		if (!dbus_g_proxy_call(player->proxy, "GetStatus", error, G_TYPE_INVALID,
