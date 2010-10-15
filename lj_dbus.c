@@ -258,17 +258,17 @@ lj_dbus_mpris_update_info_v1(MediaPlayer *player, GError **error) {
 		}
 
 		value = (GValue *) g_hash_table_lookup(info, "artist");
-		if (value != NULL && G_TYPE_CHECK_VALUE_TYPE(value, G_TYPE_STRV)) {
+		if (value && G_TYPE_CHECK_VALUE_TYPE(value, G_TYPE_STRV)) {
 			g_strlcpy(player->info.artist, g_value_get_string(value), MPRIS_INFO_LEN);
 		}
 
 		value = (GValue *) g_hash_table_lookup(info, "album");
-		if (value != NULL && G_VALUE_HOLDS_STRING(value)) {
+		if (value && G_VALUE_HOLDS_STRING(value)) {
 			g_strlcpy(player->info.album, g_value_get_string(value), MPRIS_INFO_LEN);
 		}
 
 		value = (GValue *) g_hash_table_lookup(info, "title");
-		if (value != NULL && G_VALUE_HOLDS_STRING(value)) {
+		if (value && G_VALUE_HOLDS_STRING(value)) {
 			g_strlcpy(player->info.title, g_value_get_string(value), MPRIS_INFO_LEN);
 		}
 	}
@@ -281,7 +281,6 @@ lj_dbus_mpris_update_info_v2(MediaPlayer *player, GError **error) {
 	GHashTable *info = NULL;
 	GValue *value = NULL;
 	GValue result = { 0, };
-	//GValue result;
 	const gchar *status;
 
 	if (!dbus_g_proxy_call(player->proxy, "Get", error,
