@@ -228,7 +228,7 @@ lj_dbus_mpris_update_info(JamDBus *jd, GList *list, GError **error) {
 	if (player->mprisv == MPRIS_V2) {
 		/* If we have MPRISv2 */
 		return lj_dbus_mpris_update_info_v2(player, error);
-	} else if (player->mprisv == MPRIS_V2) {
+	} else if (player->mprisv == MPRIS_V1) {
 		/* If we have MPRISv1 */
 		return lj_dbus_mpris_update_info_v1(player, error);
 	}
