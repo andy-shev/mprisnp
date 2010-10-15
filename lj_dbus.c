@@ -87,6 +87,7 @@ lj_dbus_append_player_v1(JamDBus *jd, gchar *dest) {
 						   G_TYPE_STRING, &name, G_TYPE_INVALID)) {
 		g_printerr("Error: %s\n", error->message);
 		g_error_free(error);
+		g_object_unref(proxy);
 		return FALSE;
 	}
 
@@ -121,12 +122,14 @@ lj_dbus_append_player_v2(JamDBus *jd, gchar *dest) {
 			G_TYPE_VALUE, &result, G_TYPE_INVALID)) {
 		g_printerr("Error: %s\n", error->message);
 		g_error_free(error);
+		g_object_unref(proxy);
 		return FALSE;
 	}
 
 	if (!G_VALUE_HOLDS_STRING(&result)) {
 		/* TODO: Error messaging */
 		g_value_unset(&result);
+		g_object_unref(proxy);
 		return FALSE;
 	}
 
@@ -149,9 +152,6 @@ lj_dbus_append_player_v2(JamDBus *jd, gchar *dest) {
 static void
 lj_dbus_players_clear(JamDBus *jd) {
 	GList *list;
-
-	if (jd->player == NULL)
-		return;
 
 	for (list = g_list_first(jd->player); list; list = g_list_next(list)) {
 		MediaPlayer *player = (MediaPlayer *) list->data;
@@ -177,6 +177,7 @@ lj_dbus_players_find(JamDBus *jd, GError **error) {
 
 	if (!dbus_g_proxy_call(proxy, "ListNames", error, G_TYPE_INVALID,
 						   G_TYPE_STRV, &names, G_TYPE_INVALID)) {
+		g_object_unref(proxy);
 		return FALSE;
 	}
 
@@ -239,7 +240,7 @@ static gboolean
 lj_dbus_mpris_update_info_v1(MediaPlayer *player, GError **error) {
 	GValueArray *array = NULL;
 	GHashTable *info = NULL;
-	GValue *value = NULL;
+	GValue *value;
 
 	if (player->hint & MPRIS_HINT_BAD_STATUS) {
 		if (!dbus_g_proxy_call(player->proxy, "GetStatus", error, G_TYPE_INVALID,
@@ -284,8 +285,8 @@ lj_dbus_mpris_update_info_v1(MediaPlayer *player, GError **error) {
 
 static gboolean
 lj_dbus_mpris_update_info_v2(MediaPlayer *player, GError **error) {
-	GHashTable *info = NULL;
-	GValue *value = NULL;
+	GHashTable *info;
+	GValue *value;
 	GValue result = { 0, };
 	const gchar *status;
 
@@ -364,6 +365,7 @@ lj_dbus_mpris_update_info_v2(MediaPlayer *player, GError **error) {
 GQuark
 lj_dbus_error_quark(void) {
 	static GQuark quark = 0;
+
 	if (quark == 0)
 		quark = g_quark_from_static_string("dbus-error-quark");
 	return quark;
@@ -405,7 +407,7 @@ lj_dbus_mpris_current_music(JamDBus *jd, GError **error) {
 #include <stdio.h>
 
 int
-main (int argc, char **argv)
+main()
 {
 	JamDBus *jd;
 	GList *list;
