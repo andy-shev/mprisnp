@@ -18,7 +18,7 @@
 
 /* Internal prototypes */
 static gboolean lj_dbus_open(JamDBus *jd);
-static gboolean lj_dbus_append_player(JamDBus *jd, gchar *dest);
+static gboolean lj_dbus_append_player_v1(JamDBus *jd, gchar *dest);
 static gboolean lj_dbus_append_player_v2(JamDBus *jd, gchar *dest);
 static void lj_dbus_players_clear(JamDBus *jd);
 static gboolean lj_dbus_players_find(JamDBus *jd, GError **error);
@@ -58,7 +58,7 @@ lj_dbus_new(void) {
 }
 
 static gboolean
-lj_dbus_append_player(JamDBus *jd, gchar *dest) {
+lj_dbus_append_player_v1(JamDBus *jd, gchar *dest) {
 	MediaPlayer *player;
 	DBusGProxy *proxy;
 	GError *error = NULL;
@@ -105,7 +105,6 @@ lj_dbus_append_player_v2(JamDBus *jd, gchar *dest) {
 	GError *error = NULL;
 	gchar *version;
 	GValue result = { 0, };
-	//GValue result;
 
 	proxy = dbus_g_proxy_new_for_name(jd->bus, dest, "/org/mpris/MediaPlayer2", DBUS_IF_PROPS);
 
@@ -179,7 +178,7 @@ lj_dbus_players_find(JamDBus *jd, GError **error) {
 		if (g_str_has_prefix(*p, "org.mpris.MediaPlayer2.")) {
 			lj_dbus_append_player_v2(jd, *p);
 		} else if (g_str_has_prefix(*p, "org.mpris.")) {
-			lj_dbus_append_player(jd, *p);
+			lj_dbus_append_player_v1(jd, *p);
 		}
 	}
 
