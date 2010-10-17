@@ -156,10 +156,8 @@ lj_dbus_players_clear(JamDBus *jd) {
 	for (list = g_list_first(jd->player); list; list = g_list_next(list)) {
 		MediaPlayer *player = (MediaPlayer *) list->data;
 		g_object_unref(player->proxy);
-		if (player->name)
-			g_free(player->name);
-		if (player->dest)
-			g_free(player->dest);
+		g_free(player->name);
+		g_free(player->dest);
 	}
 	g_list_free(jd->player);
 	jd->player = NULL;
@@ -233,6 +231,7 @@ lj_dbus_mpris_update_info(JamDBus *jd, GList *list, GError **error) {
 		return lj_dbus_mpris_update_info_v1(player, error);
 	}
 
+	/* Unknown MPRIS version */
 	return FALSE;
 }
 
