@@ -209,11 +209,8 @@ lj_dbus_mpris_update_list(JamDBus *jd, GError **error) {
 /* TODO: Connect to status change signal */
 
 gboolean
-lj_dbus_mpris_update_info(JamDBus *jd, GList *list, GError **error) {
+lj_dbus_mpris_update_info(GList *list, GError **error) {
 	MediaPlayer *player;
-
-	if (jd == NULL)
-		return FALSE;
 
 	if (list == NULL)
 		return FALSE;
@@ -382,7 +379,7 @@ lj_dbus_mpris_current_music(JamDBus *jd, GError **error) {
 
 	list = jd ? jd->player : NULL;
 
-	if (lj_dbus_mpris_update_info(jd, list, error)) {
+	if (lj_dbus_mpris_update_info(list, error)) {
 		MediaPlayer *player = (MediaPlayer *) list->data;
 		if (player->info.status == MPRIS_STATUS_PLAYING) {
 			music = g_strdup_printf("%s - %s - %s",
@@ -428,7 +425,7 @@ main()
 			if (player->version)
 				printf("Version of player: %s\n", player->version);
 			jd->player = list;
-			lj_dbus_mpris_update_info(jd, jd->player, &error);
+			lj_dbus_mpris_update_info(jd->player, &error);
 			if (error) {
 				g_printerr("Error: %s\n", error->message);
 				g_error_free(error);

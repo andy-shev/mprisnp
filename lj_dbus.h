@@ -63,7 +63,7 @@ void lj_dbus_close(JamDBus *jd);
 JamDBus *lj_dbus_new(void);
 
 gboolean lj_dbus_mpris_update_list(JamDBus *jd, GError **error);
-gboolean lj_dbus_mpris_update_info(JamDBus *jd, GList *list, GError **error);
+gboolean lj_dbus_mpris_update_info(GList *list, GError **error);
 
 #define MPRIS_ERROR_NOT_PLAYING		1
 #define MPRIS_ERROR_NO_PLAYER		2
